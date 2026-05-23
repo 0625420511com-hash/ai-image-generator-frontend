@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — AI Image Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-box">
+      <div class="login-title">✦ AI Gen</div>
+      <p class="login-sub">เข้าสู่ระบบเพื่อเริ่มสร้างรูปภาพ AI</p>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" />
+      </div>
+
+      <button class="btn btn-primary" style="width:100%; padding:14px; font-size:1rem;" id="login-btn">
+        เข้าสู่ระบบ
+      </button>
+
+      <p style="text-align:center; margin-top:16px; font-size:0.85rem; color:var(--text2);">
+        ยังไม่มีบัญชี?
+        <a href="#" id="switch-signup" style="color:var(--accent); text-decoration:none;">สมัครสมาชิก</a>
+      </p>
+
+      <div id="auth-msg" style="margin-top:16px; font-size:0.85rem; text-align:center; display:none;"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    let isSignup = false;
+
+    document.getElementById('switch-signup').addEventListener('click', (e) => {
+      e.preventDefault();
+      isSignup = !isSignup;
+      const btn = document.getElementById('login-btn');
+      const link = document.getElementById('switch-signup');
+      const label = document.querySelector('.login-page p.login-sub');
+      if (isSignup) {
+        btn.textContent = 'สมัครสมาชิก';
+        link.textContent = 'เข้าสู่ระบบแทน';
+        label.textContent = 'สร้างบัญชีใหม่';
+      } else {
+        btn.textContent = 'เข้าสู่ระบบ';
+        link.textContent = 'สมัครสมาชิก';
+        label.textContent = 'เข้าสู่ระบบเพื่อเริ่มสร้างรูปภาพ AI';
+      }
+    });
+
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('login-btn');
+      const msg = document.getElementById('auth-msg');
+
+      if (!email || !password) {
+        showMsg('กรุณากรอกอีเมลและรหัสผ่าน', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'กำลังโหลด...';
+
+      try {
+        if (isSignup) {
+          await authSignup(email, password);
+          showMsg('สมัครสมาชิกสำเร็จ! กรุณาเช็ค Email ยืนยัน', 'success');
+        } else {
+          await authLogin(email, password);
+          window.location.href = 'index.html';
+        }
+      } catch (err) {
+        showMsg(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = isSignup ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
+      }
+    });
+
+    function showMsg(text, type) {
+      const msg = document.getElementById('auth-msg');
+      msg.style.display = 'block';
+      msg.style.color = type === 'error' ? 'var(--error)' : 'var(--success)';
+      msg.textContent = text;
+    }
+  </script>
+</body>
+</html>
