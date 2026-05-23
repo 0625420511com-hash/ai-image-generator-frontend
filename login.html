@@ -1,99 +1,123 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login — AI Image Generator</title>
+  <title>AI Image Generator</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <div class="login-page">
-    <div class="login-box">
-      <div class="login-title">✦ AI Gen</div>
-      <p class="login-sub">เข้าสู่ระบบเพื่อเริ่มสร้างรูปภาพ AI</p>
 
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" placeholder="you@example.com" />
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">✦ AI Image Generator</div>
+    <div class="header-right"></div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Left: Form Panel -->
+    <div class="form-panel">
+      <div class="panel">
+        <div class="panel-title">สร้างรูปภาพ</div>
+
+        <div class="form-group">
+          <label for="prompt">Prompt</label>
+          <textarea id="prompt"
+            placeholder="อธิบายรูปที่ต้องการ เช่น: a futuristic city at night, neon lights, cinematic..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="model-select">โมเดล AI</label>
+          <select id="model-select" id="model-select-fix">
+            <option value="pollinations">Pollinations AI (ฟรี, เร็ว)</option>
+            <option value="gemini">Gemini (Google)</option>
+            <option value="stable-diffusion">Stable Diffusion (HuggingFace)</option>
+            <option value="seaart">SeaArt <span class="badge badge-external">เปิดเว็บภายนอก</span></option>
+          </select>
+        </div>
+
+        <div id="seaart-note"
+          style="display:none; font-size:0.8rem; color:var(--accent2); margin-top:-8px; margin-bottom:12px;">
+          🎨 SeaArt จะ copy prompt และเปิดเว็บใหม่ให้อัตโนมัติ
+        </div>
+
+        <div class="form-group">
+          <label for="aspect-ratio">Aspect Ratio</label>
+          <select id="aspect-ratio">
+            <option value="1:1">1:1 — Square</option>
+            <option value="16:9">16:9 — Landscape</option>
+            <option value="9:16">9:16 — Portrait</option>
+            <option value="4:3">4:3 — Standard</option>
+            <option value="3:4">3:4 — Portrait Standard</option>
+          </select>
+        </div>
+
+        <button class="btn-generate" id="generate-btn">
+          <div class="spinner" id="spinner"></div>
+          <span id="btn-text">✦ สร้างรูป</span>
+        </button>
       </div>
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="••••••••" />
-      </div>
-
-      <button class="btn btn-primary" style="width:100%; padding:14px; font-size:1rem;" id="login-btn">
-        เข้าสู่ระบบ
-      </button>
-
-      <p style="text-align:center; margin-top:16px; font-size:0.85rem; color:var(--text2);">
-        ยังไม่มีบัญชี?
-        <a href="#" id="switch-signup" style="color:var(--accent); text-decoration:none;">สมัครสมาชิก</a>
-      </p>
-
-      <div id="auth-msg" style="margin-top:16px; font-size:0.85rem; text-align:center; display:none;"></div>
     </div>
-  </div>
+
+    <!-- Right: Result + History -->
+    <div class="result-panel">
+
+      <!-- Image Preview -->
+      <div class="panel" style="padding:0; overflow:hidden;">
+        <div class="image-preview">
+          <div class="image-placeholder" id="image-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <p>รูปภาพจะปรากฏที่นี่</p>
+          </div>
+          <img id="result-img" alt="Generated image" />
+          <div class="image-actions" id="image-actions">
+            <button class="btn btn-primary">⬇ Download</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="panel">
+        <div class="panel-title">ประวัติการสร้าง</div>
+        <div class="history-grid" id="history-grid">
+          <p class="empty-history">กำลังโหลด...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
 
   <div class="toast" id="toast"></div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/auth.js"></script>
+  <script src="js/adapters/gemini.js"></script>
+  <script src="js/adapters/pollinations.js"></script>
+  <script src="js/adapters/stable-diffusion.js"></script>
+  <script src="js/adapters/seaart.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/generate.js"></script>
+
   <script>
-    let isSignup = false;
+    // Bind event listeners
+    document.getElementById('generate-btn').addEventListener('click', handleGenerate);
+    document.getElementById('model-select').addEventListener('change', handleModelChange);
+    document.getElementById('download-btn') && document.getElementById('download-btn').addEventListener('click', handleDownload);
 
-    document.getElementById('switch-signup').addEventListener('click', (e) => {
-      e.preventDefault();
-      isSignup = !isSignup;
-      const btn = document.getElementById('login-btn');
-      const link = document.getElementById('switch-signup');
-      const label = document.querySelector('.login-page p.login-sub');
-      if (isSignup) {
-        btn.textContent = 'สมัครสมาชิก';
-        link.textContent = 'เข้าสู่ระบบแทน';
-        label.textContent = 'สร้างบัญชีใหม่';
-      } else {
-        btn.textContent = 'เข้าสู่ระบบ';
-        link.textContent = 'สมัครสมาชิก';
-        label.textContent = 'เข้าสู่ระบบเพื่อเริ่มสร้างรูปภาพ AI';
-      }
-    });
-
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const btn = document.getElementById('login-btn');
-      const msg = document.getElementById('auth-msg');
-
-      if (!email || !password) {
-        showMsg('กรุณากรอกอีเมลและรหัสผ่าน', 'error');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'กำลังโหลด...';
-
-      try {
-        if (isSignup) {
-          await authSignup(email, password);
-          showMsg('สมัครสมาชิกสำเร็จ! กรุณาเช็ค Email ยืนยัน', 'success');
-        } else {
-          await authLogin(email, password);
-          window.location.href = 'index.html';
-        }
-      } catch (err) {
-        showMsg(err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = isSignup ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
-      }
-    });
-
-    function showMsg(text, type) {
-      const msg = document.getElementById('auth-msg');
-      msg.style.display = 'block';
-      msg.style.color = type === 'error' ? 'var(--error)' : 'var(--success)';
-      msg.textContent = text;
-    }
+    // Init: load history directly (no auth required)
+    (async () => {
+      await refreshHistory();
+    })();
   </script>
 </body>
+
 </html>
