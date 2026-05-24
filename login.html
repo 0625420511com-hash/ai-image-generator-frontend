@@ -32,7 +32,7 @@
 
         <div class="form-group">
           <label for="model-select">โมเดล AI</label>
-          <select id="model-select" id="model-select-fix">
+          <select id="model-select">
             <option value="pollinations">Pollinations AI (ฟรี, เร็ว)</option>
             <option value="gemini">Gemini (Google)</option>
             <option value="stable-diffusion">Stable Diffusion (HuggingFace)</option>
@@ -56,17 +56,15 @@
           </select>
         </div>
 
-        <button class="btn-generate" id="generate-btn">
+        <button class="btn-generate" id="generate-btn" onclick="handleGenerate()">
           <div class="spinner" id="spinner"></div>
           <span id="btn-text">✦ สร้างรูป</span>
         </button>
       </div>
     </div>
 
-    <!-- Right: Result + History -->
+    <!-- Right: Result -->
     <div class="result-panel">
-
-      <!-- Image Preview -->
       <div class="panel" style="padding:0; overflow:hidden;">
         <div class="image-preview">
           <div class="image-placeholder" id="image-placeholder">
@@ -77,70 +75,45 @@
             </svg>
             <p>รูปภาพจะปรากฏที่นี่</p>
           </div>
-          <img id="result-img" alt="Generated image" />
-          <div class="image-actions" id="image-actions">
+          <img id="result-img" alt="Generated image" style="display:none;" />
+          <div class="image-actions" id="image-actions" style="display:none;">
             <button class="btn btn-primary" id="download-btn" onclick="handleDownload()">⬇ Download</button>
           </div>
         </div>
       </div>
-
-      <!-- History -->
-      <div class="panel">
-        <div class="panel-title">ประวัติการสร้าง</div>
-        <div class="history-grid" id="history-grid">
-          <p class="empty-history">กำลังโหลด...</p>
-        </div>
-      </div>
-
     </div>
+
   </main>
 
   <div class="toast" id="toast"></div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/adapters/gemini.js"></script>
+  <!-- Scripts — adapters โหลดก่อน generate.js เสมอ -->
   <script src="js/adapters/pollinations.js"></script>
+  <script src="js/adapters/gemini.js"></script>
   <script src="js/adapters/stable-diffusion.js"></script>
   <script src="js/adapters/seaart.js"></script>
-  <script src="js/history.js"></script>
   <script src="js/generate.js"></script>
 
   <script>
-    // [DEBUG] ตรวจสอบว่า function ทุกตัวโหลดครบก่อน bind event
-    console.log('[login] inline init script running');
+    // [DEBUG] ตรวจสอบว่า function โหลดครบ
     console.log('[login] handleGenerate:', typeof handleGenerate);
-    console.log('[login] handleModelChange:', typeof handleModelChange);
     console.log('[login] handleDownload:', typeof handleDownload);
-    console.log('[login] refreshHistory:', typeof refreshHistory);
 
-    // [แก้บัค] ตรวจสอบก่อน bind เพื่อป้องกัน ReferenceError
-    if (typeof handleGenerate === 'undefined') {
-      console.error('[login] ❌ handleGenerate ไม่ถูก define — ตรวจสอบว่า generate.js โหลดสำเร็จ');
-    } else {
-      document.getElementById('generate-btn').addEventListener('click', handleGenerate);
-      console.log('[login] ✅ generate-btn bound');
-    }
-
-    if (typeof handleModelChange !== 'undefined') {
-      document.getElementById('model-select').addEventListener('change', handleModelChange);
-      console.log('[login] ✅ model-select bound');
-    }
-
-    const dlBtn = document.getElementById('download-btn');
-    if (dlBtn && typeof handleDownload !== 'undefined') {
-      dlBtn.addEventListener('click', handleDownload);
-      console.log('[login] ✅ download-btn bound');
-    }
-
-    // Init: load history directly (no auth required)
-    (async () => {
-      console.log('[login] loading initial history...');
-      await refreshHistory();
-      console.log('[login] history loaded');
-    })();
+    // model select handler
+    document.getElementById('model-select').addEventListener('change', function () {
+      const model = this.value;
+      const aspectRatio = document.getElementById('aspect-ratio');
+      const seaartNote = document.getElementById('seaart-note');
+      if (model === 'seaart') {
+        aspectRatio.disabled = true;
+        if (seaartNote) seaartNote.style.display = 'block';
+      } else {
+        aspectRatio.disabled = false;
+        if (seaartNote) seaartNote.style.display = 'none';
+      }
+    });
   </script>
+
 </body>
 
 </html>
