@@ -108,14 +108,37 @@
   <script src="js/generate.js"></script>
 
   <script>
-    // Bind event listeners
-    document.getElementById('generate-btn').addEventListener('click', handleGenerate);
-    document.getElementById('model-select').addEventListener('change', handleModelChange);
-    document.getElementById('download-btn') && document.getElementById('download-btn').addEventListener('click', handleDownload);
+    // [DEBUG] ตรวจสอบว่า function ทุกตัวโหลดครบก่อน bind event
+    console.log('[login] inline init script running');
+    console.log('[login] handleGenerate:', typeof handleGenerate);
+    console.log('[login] handleModelChange:', typeof handleModelChange);
+    console.log('[login] handleDownload:', typeof handleDownload);
+    console.log('[login] refreshHistory:', typeof refreshHistory);
+
+    // [แก้บัค] ตรวจสอบก่อน bind เพื่อป้องกัน ReferenceError
+    if (typeof handleGenerate === 'undefined') {
+      console.error('[login] ❌ handleGenerate ไม่ถูก define — ตรวจสอบว่า generate.js โหลดสำเร็จ');
+    } else {
+      document.getElementById('generate-btn').addEventListener('click', handleGenerate);
+      console.log('[login] ✅ generate-btn bound');
+    }
+
+    if (typeof handleModelChange !== 'undefined') {
+      document.getElementById('model-select').addEventListener('change', handleModelChange);
+      console.log('[login] ✅ model-select bound');
+    }
+
+    const dlBtn = document.getElementById('download-btn');
+    if (dlBtn && typeof handleDownload !== 'undefined') {
+      dlBtn.addEventListener('click', handleDownload);
+      console.log('[login] ✅ download-btn bound');
+    }
 
     // Init: load history directly (no auth required)
     (async () => {
+      console.log('[login] loading initial history...');
       await refreshHistory();
+      console.log('[login] history loaded');
     })();
   </script>
 </body>

@@ -1,10 +1,11 @@
 // adapters/gemini.js — calls backend proxy (key hidden server-side)
-const BACKEND_URL = window.BACKEND_URL || '';
+// [DEBUG] ใช้ window.BACKEND_URL จาก generate.js แทนการประกาศซ้ำ (แก้บัค: Identifier already declared)
+console.log('[gemini] adapter loaded | BACKEND_URL:', window.BACKEND_URL);
 
 async function generateWithGemini(prompt, aspectRatio) {
   console.log('[gemini] generateWithGemini called, prompt:', prompt);
   try {
-    const response = await fetch(`${BACKEND_URL}/api/generate`, {
+    const response = await fetch(`${window.BACKEND_URL}/api/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
