@@ -29,16 +29,25 @@ async function handleGenerate() {
     } else if (model === 'seaart') {
       await generateWithSeaArt(prompt);
       showToast('คัดลอก prompt แล้ว เปิด SeaArt แล้ว', 'info');
-      await saveHistory({ prompt, model: 'seaart', aspectRatio, imageUrl: null, isExternal: true });
-      await refreshHistory();
+      // [DEBUG] ข้าม saveHistory เพราะไม่บังคับ login
+      console.log('[generate] seaart: skipping saveHistory (no auth required)');
       setLoading(false);
       return;
     }
 
     if (imageUrl) {
       showImage(imageUrl);
-      await saveHistory({ prompt, model, aspectRatio, imageUrl, isExternal: false });
-      await refreshHistory();
+
+      // [DEBUG] ตรวจสอบ session ก่อน save — ถ้าไม่มีก็ข้ามได้ ไม่ error
+      const session = await checkSession();
+      if (session) {
+        console.log('[generate] session found, saving history...');
+        await saveHistory({ prompt, model, aspectRatio, imageUrl, isExternal: false });
+        await refreshHistory();
+      } else {
+        console.log('[generate] no session, skipping saveHistory (guest mode)');
+      }
+
       showToast('สร้างรูปสำเร็จ!', 'success');
     }
 
@@ -76,6 +85,7 @@ async function handleDownload() {
   const img = document.getElementById('result-img');
   if (!img || !img.src) return;
 
+  console.log('[generate] handleDownload called, src:', img.src);
   try {
     const response = await fetch(img.src);
     const blob = await response.blob();
@@ -86,7 +96,9 @@ async function handleDownload() {
     a.click();
     URL.revokeObjectURL(url);
     showToast('ดาวน์โหลดแล้ว!', 'success');
+    console.log('[generate] handleDownload success');
   } catch (err) {
+    console.warn('[generate] handleDownload fetch failed, fallback open tab:', err.message);
     // Fallback for cross-origin images
     window.open(img.src, '_blank');
   }
