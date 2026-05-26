@@ -16,6 +16,20 @@
     <div class="header-right"></div>
   </header>
 
+  <!-- [FIX Bug#4] Loading Overlay — เพิ่มให้ login.html เหมือน index.html -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-orb"></div>
+      <div class="loading-rings">
+        <div class="loading-ring ring-1"></div>
+        <div class="loading-ring ring-2"></div>
+        <div class="loading-ring ring-3"></div>
+      </div>
+      <p class="loading-label" id="loading-label">กำลังสร้างรูปภาพ...</p>
+      <p class="loading-sub">AI กำลังทำงาน กรุณารอสักครู่</p>
+    </div>
+  </div>
+
   <!-- Main -->
   <main class="main">
 
@@ -88,6 +102,8 @@
   <div class="toast" id="toast"></div>
 
   <!-- Scripts — adapters โหลดก่อน generate.js เสมอ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/auth.js"></script>
   <script src="js/adapters/pollinations.js"></script>
   <script src="js/adapters/gemini.js"></script>
   <script src="js/adapters/stable-diffusion.js"></script>
@@ -95,15 +111,28 @@
   <script src="js/generate.js"></script>
 
   <script>
-    // [DEBUG] ตรวจสอบว่า function โหลดครบ
+    console.log('[login] page loaded');
     console.log('[login] handleGenerate:', typeof handleGenerate);
     console.log('[login] handleDownload:', typeof handleDownload);
+
+    // [FIX Bug#3] auth guard — ถ้า login แล้วให้ redirect ไป index.html ทันที
+    (async () => {
+      console.log('[login] checking session...');
+      const session = await checkSession();
+      if (session) {
+        console.log('[login] already logged in, redirecting to index.html');
+        window.location.href = 'index.html';
+        return;
+      }
+      console.log('[login] no session — stay on login page');
+    })();
 
     // model select handler
     document.getElementById('model-select').addEventListener('change', function () {
       const model = this.value;
       const aspectRatio = document.getElementById('aspect-ratio');
       const seaartNote = document.getElementById('seaart-note');
+      console.log('[login] model changed to:', model);
       if (model === 'seaart') {
         aspectRatio.disabled = true;
         if (seaartNote) seaartNote.style.display = 'block';
